@@ -1,10 +1,12 @@
-// Data global dan data awal
+// Data global dengan properti kategori, resi dan tanggal pengembalian
 let currentRole = '';
 let books = JSON.parse(localStorage.getItem('books')) || [
-    { title: 'Novel: Harry Potter', available: true, resi: null, tanggalPengembalian: null },
-    { title: 'Cerpen: Kisah Klasik', available: false, resi: 'RESI20231120-001', tanggalPengembalian: '2023-12-01' },
-    { title: 'Latsol Matematika', available: true, resi: null, tanggalPengembalian: null }
+    { title: 'Novel: Harry Potter', available: true, resi: null, tanggalPengembalian: null, kategori: 'Novel' },
+    { title: 'Matematika Kelas X', available: true, resi: null, tanggalPengembalian: null, kategori: 'Pelajaran Kelas X' },
+    { title: 'Fisika Kelas XI', available: true, resi: null, tanggalPengembalian: null, kategori: 'Pelajaran Kelas XI' },
+    { title: 'Kimia Kelas XII', available: false, resi: 'RESI20231120-001', tanggalPengembalian: '2023-12-01', kategori: 'Pelajaran Kelas XII' },
 ];
+
 let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
     {
         title: 'Quiz Matematika Dasar',
@@ -15,7 +17,7 @@ let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
     }
 ];
 
-// Fungsi set peran & render konten
+// Set role dan render
 function setRole(role) {
     currentRole = role;
     document.getElementById('login').style.display = 'none';
@@ -23,7 +25,7 @@ function setRole(role) {
     loadContent();
 }
 
-// Fungsi kembali ke halaman utama
+// Kembali ke halaman awal
 function goHome() {
     currentRole = '';
     document.getElementById('content').style.display = 'none';
@@ -31,7 +33,7 @@ function goHome() {
     document.getElementById('content').innerHTML = '';
 }
 
-// Render konten berdasar peran
+// Render konten setiap role
 function loadContent() {
     const content = document.getElementById('content');
     content.innerHTML = '';
@@ -40,9 +42,16 @@ function loadContent() {
         content.innerHTML = `
             <h2><i class="fas fa-search"></i> Menu Siswa</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
+            <h3>Filter Kategori Buku</h3>
+            <select id="filterKategori" onchange="searchBook()">
+                <option value="Semua">Semua Kategori</option>
+                <option value="Novel">Novel</option>
+                <option value="Pelajaran Kelas X">Pelajaran Kelas X</option>
+                <option value="Pelajaran Kelas XI">Pelajaran Kelas XI</option>
+                <option value="Pelajaran Kelas XII">Pelajaran Kelas XII</option>
+            </select>
             <h3>Cari Buku</h3>
-            <input type="text" id="searchBook" placeholder="Ketik judul buku" />
-            <button onclick="searchBook()">Cari</button>
+            <input type="text" id="searchBook" placeholder="Ketik judul buku" oninput="searchBook()" />
             <div id="bookResults"></div>
             <h3>Kerjakan Quiz</h3>
             <select id="quizSelect"></select>
@@ -50,7 +59,8 @@ function loadContent() {
             <div id="quizContainer"></div>
         `;
         loadQuizzesForStudent();
-    }else if(currentRole === 'guru'){
+    }
+    else if(currentRole === 'guru'){
         content.innerHTML = `
             <h2><i class="fas fa-edit"></i> Menu Guru</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -63,13 +73,22 @@ function loadContent() {
             </form>
         `;
         document.getElementById('quizForm').addEventListener('submit', saveQuiz);
-    }else if(currentRole === 'penjaga'){
+    }
+    else if(currentRole === 'penjaga'){
         content.innerHTML = `
             <h2><i class="fas fa-cogs"></i> Menu Penjaga Perpustakaan</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
-            <h3>Kelola Buku</h3>
+            <h3>Tambah Buku Baru</h3>
             <form id="bookForm">
                 <input type="text" id="bookTitle" placeholder="Judul Buku" required />
+                <input type="text" id="bookResi" placeholder="Nomor Resi Buku (isi manual)" required />
+                <select id="bookKategori" required>
+                    <option value="">Pilih Kategori</option>
+                    <option value="Novel">Novel</option>
+                    <option value="Pelajaran Kelas X">Pelajaran Kelas X</option>
+                    <option value="Pelajaran Kelas XI">Pelajaran Kelas XI</option>
+                    <option value="Pelajaran Kelas XII">Pelajaran Kelas XII</option>
+                </select>
                 <button type="submit">Tambah Buku</button>
             </form>
             <h3>Daftar Buku</h3>
@@ -82,19 +101,28 @@ function loadContent() {
     localStorage.setItem('quizzes', JSON.stringify(quizzes));
 }
 
-// Fungsi cari buku siswa
+// Fungsi cari buku dengan filter kategori (siswa)
 function searchBook(){
     const query = document.getElementById('searchBook').value.toLowerCase();
-    const results = books.filter(b=>b.title.toLowerCase().includes(query));
+    const kategori = document.getElementById('filterKategori').value;
+    const results = books.filter(b => 
+        (kategori === 'Semua' || b.kategori === kategori) &&
+        b.title.toLowerCase().includes(query)
+    );
     const resultsDiv = document.getElementById('bookResults');
     if(results.length){
-        resultsDiv.innerHTML = results.map(book => `<li>${book.title} - Status: ${book.available ? '<span style="color:green">Tersedia</span>' : '<span style="color:red">Dipinjam</span>'}</li>`).join('');
-    }else{
+        resultsDiv.innerHTML = results.map(book => `
+            <li>
+                <strong>${book.title}</strong> (${book.kategori}) - 
+                Status: ${book.available ? '<span style="color:green">Tersedia</span>' : '<span style="color:red">Dipinjam</span>'}
+            </li>
+        `).join('');
+    } else {
         resultsDiv.innerHTML = '<p>Tidak ada buku ditemukan.</p>';
     }
 }
 
-// Quiz tanpa radio button, klik div opsi langsung
+// Quiz tanpa radio button klik
 window.selectedOptions = {};
 
 function loadQuizzesForStudent() {
@@ -216,47 +244,49 @@ function saveQuiz(e){
 function addBook(e){
     e.preventDefault();
     const title = document.getElementById('bookTitle').value.trim();
+    const resi = document.getElementById('bookResi').value.trim();
+    const kategori = document.getElementById('bookKategori').value;
     if(!title){
         alert('Judul buku tidak boleh kosong!');
         return;
     }
-    books.push({title, available:true, resi:null, tanggalPengembalian:null});
+    if(!resi){
+        alert('Nomor Resi buku harus diisi!');
+        return;
+    }
+    if(kategori === ''){
+        alert('Pilih kategori buku terlebih dahulu!');
+        return;
+    }
+    if(books.some(b => b.resi === resi)){
+        alert('Nomor Resi sudah dipakai, gunakan nomor lain!');
+        return;
+    }
+    books.push({title, available:true, resi: resi, tanggalPengembalian:null, kategori});
     localStorage.setItem('books', JSON.stringify(books));
     displayBooks();
     document.getElementById('bookForm').reset();
 }
 
-// Generate nomor resi unik untuk peminjaman
-function generateResi() {
-    const datePart = new Date().toISOString().slice(0,10).replace(/-/g,'');
-    const resiHariIni = books.map(b => b.resi).filter(r => r && r.startsWith('RESI'+datePart)).sort();
-    let nomor = 1;
-    if(resiHariIni.length > 0) {
-        const last = resiHariIni[resiHariIni.length-1];
-        nomor = parseInt(last.slice(-3)) + 1;
-    }
-    return `RESI${datePart}-${nomor.toString().padStart(3,'0')}`;
-}
-
-// Tampilkan daftar buku dengan resi dan tanggal pengembalian
+// Fungsi tampil daftar buku
 function displayBooks(){
     const list = document.getElementById('bookList');
-    if(books.length === 0) {
+    if(books.length === 0){
         list.innerHTML = '<p>Belum ada buku tersedia.</p>';
         return;
     }
     list.innerHTML = books.map((book, idx) => `
         <li>
-            <strong>${book.title}</strong> - 
-            ${book.available 
-                ? `<span style="color:green">Tersedia</span>` 
+            <strong>${book.title}</strong> (${book.kategori}) - 
+            ${book.available
+                ? `<span style="color:green">Tersedia</span>`
                 : `<span style="color:red">Dipinjam</span><br>
-                   <small>Nomor Resi: <em>${book.resi || '-'}</em></small><br>
-                   <small>Tanggal Pengembalian: <em>${book.tanggalPengembalian || '-'}</em></small>`
+                <small>Nomor Resi: <em>${book.resi}</em></small><br>
+                <small>Tanggal Pengembalian: <em>${book.tanggalPengembalian || '-'}</em></small>`
             }
             <br/>
-            ${book.available 
-                ? `<button onclick="pinjamBuku(${idx})" style="background:#28a745;color:#fff;">Pinjam Buku</button>` 
+            ${book.available
+                ? `<button onclick="pinjamBuku(${idx})" style="background:#28a745;color:#fff;">Pinjam Buku</button>`
                 : `<button onclick="kembalikanBuku(${idx})" style="background:#ffc107;">Kembalikan Buku</button>`
             }
             <button onclick="deleteBook(${idx})" style="background:#dc3545;margin-left:10px;color:#fff;">Hapus</button>
@@ -264,44 +294,37 @@ function displayBooks(){
     `).join('');
 }
 
-function pinjamBuku(index) {
+// Fungsi pinjam buku (input tanggal pengembalian)
+function pinjamBuku(index){
     const buku = books[index];
     const tanggalKembali = prompt('Masukkan tanggal pengembalian (YYYY-MM-DD)', '');
-
-    if(!tanggalKembali) {
+    if(!tanggalKembali){
         alert('Tanggal pengembalian wajib diisi!');
         return;
     }
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(tanggalKembali)) {
-        alert('Format tanggal tidak valid. Contoh: 2023-12-31');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(tanggalKembali)){
+        alert('Format tanggal tidak valid, contoh: 2023-12-31');
         return;
     }
-
     buku.available = false;
     buku.tanggalPengembalian = tanggalKembali;
-    buku.resi = generateResi();
     localStorage.setItem('books', JSON.stringify(books));
     alert(`Buku "${buku.title}" berhasil dipinjam.\nNomor Resi: ${buku.resi}\nTanggal Pengembalian: ${buku.tanggalPengembalian}`);
     displayBooks();
 }
 
-function kembalikanBuku(index) {
+// Fungsi kembalikan buku
+function kembalikanBuku(index){
     if(!confirm('Apakah buku sudah dikembalikan?')) return;
     const buku = books[index];
     buku.available = true;
     buku.tanggalPengembalian = null;
-    buku.resi = null;
     localStorage.setItem('books', JSON.stringify(books));
     alert(`Buku "${buku.title}" sudah dikembalikan dan tersedia.`);
     displayBooks();
 }
 
-function toggleBorrow(index) {
-    books[index].available = !books[index].available;
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
-}
-
+// Fungsi hapus buku
 function deleteBook(index){
     if(!confirm('Yakin ingin menghapus buku ini?')) return;
     books.splice(index,1);
