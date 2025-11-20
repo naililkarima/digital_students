@@ -105,6 +105,7 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 8px 2px #fceabbcc;
 }
 
+/* Tombol utama */
 button {
     background: linear-gradient(90deg, #fceabb, #f8b500);
     color: #253858;
@@ -126,6 +127,29 @@ button:hover {
     box-shadow: 0 12px 36px rgba(252, 219, 135, 0.9);
 }
 
+/* Opsi quiz tanpa radio button, klik blok langsung */
+.options {
+    margin-top: 10px;
+}
+
+.option {
+    background: #fff9cd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 6px 0;
+    cursor: pointer;
+    font-weight: 600;
+    color: #253858;
+    user-select:none;
+    transition: background 0.3s, color 0.3s;
+}
+
+.option:hover {
+    background: #fddb3a;
+    color: #222;
+}
+
+/* Soal quiz */
 .question {
     background: #fff9cd;
     padding: 22px;
@@ -135,13 +159,7 @@ button:hover {
     box-shadow: 0 3px 14px rgba(255, 235, 59, 0.4);
 }
 
-.options input {
-    margin: 7px 0;
-    width: calc(100% - 20px);
-    font-weight: 600;
-    font-size: 1em;
-}
-
+/* List buku / item */
 ul {
     list-style: none;
     padding: 0;
@@ -163,6 +181,7 @@ li {
     color: #253858;
 }
 
+/* Hasil nilai quiz */
 .quiz-result {
     font-weight: 700;
     color: #f8b500;
@@ -193,9 +212,7 @@ li {
     box-shadow: 0 9px 36px rgba(255, 184, 0, 0.85);
 }
 
-
-/* Style Tabel dan Form Fasilitas agar konsisten tema sunshine */
-
+/* Style tabel fasilitas dan form booking*/
 table {
     border-collapse: collapse;
     width: 100%;
