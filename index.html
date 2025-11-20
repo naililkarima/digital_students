@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sistem Perpustakaan Sekolah</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
 </head>
 <body>
     <header>
         <h1><i class="fas fa-book"></i> Sistem Perpustakaan Sekolah</h1>
     </header>
-    
+
     <div id="login" class="container">
         <h2>Pilih Peran Anda</h2>
         <div class="role-buttons">
@@ -20,11 +23,9 @@
             <button onclick="setRole('penjaga')" class="role-btn"><i class="fas fa-user-shield"></i> Penjaga Perpustakaan</button>
         </div>
     </div>
-    
-    <div id="content" class="container" style="display: none;">
-        <!-- Konten dinamis berdasarkan peran -->
-    </div>
-    
+
+    <div id="content" class="container" style="display: none;"></div>
+
     <script src="script.js"></script>
 </body>
 </html>
