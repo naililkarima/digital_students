@@ -1,9 +1,9 @@
-// Variabel global dan data awal
+// Data global dan data awal
 let currentRole = '';
 let books = JSON.parse(localStorage.getItem('books')) || [
-    { title: 'Novel: Harry Potter', available: true },
-    { title: 'Cerpen: Kisah Klasik', available: false },
-    { title: 'Latsol Matematika', available: true }
+    { title: 'Novel: Harry Potter', available: true, resi: null, tanggalPengembalian: null },
+    { title: 'Cerpen: Kisah Klasik', available: false, resi: 'RESI20231120-001', tanggalPengembalian: '2023-12-01' },
+    { title: 'Latsol Matematika', available: true, resi: null, tanggalPengembalian: null }
 ];
 let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
     {
@@ -15,17 +15,7 @@ let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
     }
 ];
 
-let fasilitasList = [
-    "LabKom 1", "LabKom 2", "LabKom 3", "LabKom 4",
-    "Lab Kimia", "Lab Biologi", "Lab Fisika", "PKWU",
-    "Perpustakaan", "Mushola", "Lapangan Basket", "Lapangan Voli",
-    "Aula 1", "Aula 2"
-];
-
-// Jadwal fasilitas: { fasilitas, tanggal, jam, status, guru, mapel, kelas }
-let jadwalFasilitas = JSON.parse(localStorage.getItem('jadwalFasilitas')) || [];
-
-// Fungsi set role dan render konten
+// Fungsi set peran & render konten
 function setRole(role) {
     currentRole = role;
     document.getElementById('login').style.display = 'none';
@@ -33,7 +23,7 @@ function setRole(role) {
     loadContent();
 }
 
-// Fungsi kembali ke halaman awal
+// Fungsi kembali ke halaman utama
 function goHome() {
     currentRole = '';
     document.getElementById('content').style.display = 'none';
@@ -46,7 +36,7 @@ function loadContent() {
     const content = document.getElementById('content');
     content.innerHTML = '';
 
-    if (currentRole === 'siswa') {
+    if(currentRole === 'siswa'){
         content.innerHTML = `
             <h2><i class="fas fa-search"></i> Menu Siswa</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -60,7 +50,7 @@ function loadContent() {
             <div id="quizContainer"></div>
         `;
         loadQuizzesForStudent();
-    } else if (currentRole === 'guru') {
+    }else if(currentRole === 'guru'){
         content.innerHTML = `
             <h2><i class="fas fa-edit"></i> Menu Guru</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -73,7 +63,7 @@ function loadContent() {
             </form>
         `;
         document.getElementById('quizForm').addEventListener('submit', saveQuiz);
-    } else if (currentRole === 'penjaga') {
+    }else if(currentRole === 'penjaga'){
         content.innerHTML = `
             <h2><i class="fas fa-cogs"></i> Menu Penjaga Perpustakaan</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -82,176 +72,29 @@ function loadContent() {
                 <input type="text" id="bookTitle" placeholder="Judul Buku" required />
                 <button type="submit">Tambah Buku</button>
             </form>
+            <h3>Daftar Buku</h3>
             <ul id="bookList"></ul>
         `;
         document.getElementById('bookForm').addEventListener('submit', addBook);
         displayBooks();
-    } else if (currentRole === 'fasilitas') {
-        content.innerHTML = `
-            <h2><i class="fas fa-building"></i> Menu Fasilitas</h2>
-            <button class="logout-btn" onclick="goHome()">Keluar</button>
-            <label for="selectFasilitas">Pilih Fasilitas:</label>
-            <select id="selectFasilitas"></select>
-            <div id="jadwalContainer"></div>
-        `;
-        loadFasilitasOptions();
-        document.getElementById('selectFasilitas').addEventListener('change', function() {
-            renderJadwalFasilitasTanggal(this.value, new Date().toISOString().slice(0,10));
-        });
     }
     localStorage.setItem('books', JSON.stringify(books));
     localStorage.setItem('quizzes', JSON.stringify(quizzes));
 }
 
-// Fasilitas options
-function loadFasilitasOptions() {
-    const select = document.getElementById('selectFasilitas');
-    select.innerHTML = '<option value="">--Pilih Fasilitas--</option>' + fasilitasList.map(f => `<option value="${f}">${f}</option>`).join('');
-}
-
-// Fungsi dapatkan jam ke berapa sekarang
-function getJamSekarang() {
-    const now = new Date();
-    const jamSekolahMulai = 7; // jam masuk sekolah 7 pagi
-    const currentHour = now.getHours();
-    const jamKe = currentHour - jamSekolahMulai + 1;
-    if(jamKe < 1) return 0;
-    if(jamKe > 10) return 11;
-    return jamKe;
-}
-
-// Render jadwal fasilitas berdasarkan tanggal (default hari ini)
-function renderJadwalFasilitasTanggal(fasil, tanggal) {
-    const container = document.getElementById('jadwalContainer');
-
-    if (!fasil) {
-        container.innerHTML = '';
-        return;
-    }
-
-    let jadwalPerTanggal = jadwalFasilitas.filter(j => j.fasilitas === fasil && j.tanggal === tanggal);
-    const jamSekarang = getJamSekarang();
-
-    let html = `<h3>Jadwal untuk ${fasil} pada tanggal <input type="date" id="tanggalJadwal" value="${tanggal}"/></h3>`;
-    html += `<table border="1" cellpadding="8" cellspacing="0" style="width:100%; max-width:600px;">
-    <thead>
-        <tr>
-            <th>Jam Ke-</th>
-            <th>Status</th>
-            <th>Aksi</th>
-        </tr>
-    </thead>
-    <tbody>`;
-    for(let jam=1; jam<=10; jam++) {
-        const slot = jadwalPerTanggal.find(j => j.jam === jam);
-        let statusText='Kosong';
-        let aksiButton = `<button onclick="openBookingForm('${fasil}',${jam})">Booking</button>`;
-
-        if(slot){
-            if(jamSekarang >= jam) {
-                statusText = `Digunakan oleh ${slot.guru}, ${slot.mapel}, Kelas ${slot.kelas}`;
-            } else {
-                statusText = `Booking oleh ${slot.guru}, ${slot.mapel}, Kelas ${slot.kelas}`;
-            }
-            aksiButton = `<button onclick="openBookingForm('${fasil}',${jam})">Edit Booking</button> <button onclick="hapusBooking('${fasil}',${jam})" style="background:#dc3545;margin-left:10px;">Batalkan</button>`;
-        }
-
-        html += `<tr>
-            <td>${jam}</td>
-            <td>${statusText}</td>
-            <td>${aksiButton}</td>
-        </tr>`;
-    }
-    html += `</tbody></table>`;
-    html += `<div id="bookingFormContainer"></div>`;
-
-    container.innerHTML = html;
-
-    document.getElementById('tanggalJadwal').addEventListener('change', function(e) {
-        renderJadwalFasilitasTanggal(fasil, e.target.value);
-    });
-}
-
-// Buka form booking atau edit booking
-function openBookingForm(fasilitas, jam) {
-    const container = document.getElementById('bookingFormContainer');
-    const tanggalInput = document.getElementById('tanggalJadwal');
-    const tanggal = tanggalInput ? tanggalInput.value : new Date().toISOString().slice(0,10);
-
-    let existing = jadwalFasilitas.find(j => j.fasilitas === fasilitas && j.jam === jam && j.tanggal === tanggal);
-
-    container.innerHTML = `
-    <h4>Booking untuk ${fasilitas} Jam ke-${jam} tanggal ${tanggal}</h4>
-    <form id="formBookingFasilitas">
-        <label>Nama Guru Pengajar</label>
-        <input type="text" id="inputGuru" value="${existing ? existing.guru : ''}" required />
-        <label>Mata Pelajaran</label>
-        <input type="text" id="inputMapel" value="${existing ? existing.mapel : ''}" required />
-        <label>Kelas</label>
-        <input type="text" id="inputKelas" value="${existing ? existing.kelas : ''}" required />
-        <button type="submit">${existing ? 'Perbarui Booking' : 'Buat Booking'}</button>
-        <button type="button" onclick="batalBookingForm()">Batal</button>
-    </form>
-    <p style="color:#666;font-size:0.9em;">Jika selesai, klik "Buat Booking" atau "Perbarui Booking".</p>
-    `;
-
-    document.getElementById('formBookingFasilitas').addEventListener('submit', function(e){
-        e.preventDefault();
-        const guru = document.getElementById('inputGuru').value.trim();
-        const mapel = document.getElementById('inputMapel').value.trim();
-        const kelas = document.getElementById('inputKelas').value.trim();
-        if(!guru || !mapel || !kelas){
-            alert('Semua data harus diisi!');
-            return;
-        }
-
-        let idx = jadwalFasilitas.findIndex(j=>j.fasilitas===fasilitas && j.jam===jam && j.tanggal===tanggal);
-        if(idx !== -1){
-            jadwalFasilitas[idx].status = 'booking';
-            jadwalFasilitas[idx].guru = guru;
-            jadwalFasilitas[idx].mapel = mapel;
-            jadwalFasilitas[idx].kelas = kelas;
-        }else{
-            jadwalFasilitas.push({
-                fasilitas,
-                tanggal,
-                jam,
-                status: 'booking',
-                guru,
-                mapel,
-                kelas
-            });
-        }
-
-        localStorage.setItem('jadwalFasilitas', JSON.stringify(jadwalFasilitas));
-        alert('Booking berhasil disimpan!');
-        batalBookingForm();
-        renderJadwalFasilitasTanggal(fasilitas, tanggal);
-    });
-}
-
-function batalBookingForm(){
-    document.getElementById('bookingFormContainer').innerHTML = '';
-}
-
-function hapusBooking(fasilitas, jam){
-    const tanggalInput = document.getElementById('tanggalJadwal');
-    const tanggal = tanggalInput ? tanggalInput.value : new Date().toISOString().slice(0,10);
-
-    if(!confirm(`Batalkan booking ${fasilitas} jam ke-${jam} tanggal ${tanggal}?`)) return;
-
-    let idx = jadwalFasilitas.findIndex(j=>j.fasilitas===fasilitas && j.jam===jam && j.tanggal===tanggal);
-    if(idx !== -1){
-        jadwalFasilitas.splice(idx,1);
-        localStorage.setItem('jadwalFasilitas', JSON.stringify(jadwalFasilitas));
-        alert('Booking berhasil dibatalkan.');
-        renderJadwalFasilitasTanggal(fasilitas,tanggal);
-        batalBookingForm();
+// Fungsi cari buku siswa
+function searchBook(){
+    const query = document.getElementById('searchBook').value.toLowerCase();
+    const results = books.filter(b=>b.title.toLowerCase().includes(query));
+    const resultsDiv = document.getElementById('bookResults');
+    if(results.length){
+        resultsDiv.innerHTML = results.map(book => `<li>${book.title} - Status: ${book.available ? '<span style="color:green">Tersedia</span>' : '<span style="color:red">Dipinjam</span>'}</li>`).join('');
+    }else{
+        resultsDiv.innerHTML = '<p>Tidak ada buku ditemukan.</p>';
     }
 }
 
-// --- Fungsi-fungsi fitur quiz (tanpa radio) ---
-
+// Quiz tanpa radio button, klik div opsi langsung
 window.selectedOptions = {};
 
 function loadQuizzesForStudent() {
@@ -302,57 +145,6 @@ function submitQuiz(index) {
         if(window.selectedOptions[i] !== undefined && window.selectedOptions[i] === quiz.questions[i].correct) score++;
     }
     document.getElementById('quizContainer').innerHTML += `<div class="quiz-result">Nilai Anda: ${score}/${quiz.questions.length}</div>`;
-}
-
-// --- Fungsi lain fitur buku, guru, penjaga tetap sama ---
-
-// Tambah Buku Penjaga
-function addBook(e) {
-    e.preventDefault();
-    const title = document.getElementById('bookTitle').value.trim();
-    if(!title){
-        alert('Judul buku tidak boleh kosong!');
-        return;
-    }
-    books.push({ title, available:true });
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
-    document.getElementById('bookForm').reset();
-}
-
-function displayBooks() {
-    const list = document.getElementById('bookList');
-    list.innerHTML = books.map((book,idx) => `
-        <li>
-            ${book.title} - ${book.available ? '<span style="color:green">Tersedia</span>' : '<span style="color:red">Dipinjam</span>'}
-            <button onclick="toggleBorrow(${idx})">${book.available ? 'Tandai Dipinjam' : 'Tandai Kembali'}</button>
-            <button onclick="deleteBook(${idx})" style="background:#dc3545;margin-left:10px;">Hapus</button>
-        </li>
-    `).join('');
-}
-
-function toggleBorrow(index) {
-    books[index].available = !books[index].available;
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
-}
-
-function deleteBook(index) {
-    books.splice(index,1);
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
-}
-
-// Fungsi cari buku siswa
-function searchBook(){
-    const query = document.getElementById('searchBook').value.toLowerCase();
-    const results = books.filter(b=>b.title.toLowerCase().includes(query));
-    const resultsDiv = document.getElementById('bookResults');
-    if(results.length){
-        resultsDiv.innerHTML = results.map(book => `<li>${book.title} - Status: ${book.available ? '<span style="color:green">Tersedia</span>' : '<span style="color:red">Dipinjam</span>'}</li>`).join('');
-    }else{
-        resultsDiv.innerHTML = '<p>Tidak ada buku ditemukan.</p>';
-    }
 }
 
 // Tambah soal guru
@@ -418,4 +210,101 @@ function saveQuiz(e){
     alert('Quiz disimpan!');
     document.getElementById('quizForm').reset();
     document.getElementById('questionsContainer').innerHTML = '';
+}
+
+// Tambah buku penjaga
+function addBook(e){
+    e.preventDefault();
+    const title = document.getElementById('bookTitle').value.trim();
+    if(!title){
+        alert('Judul buku tidak boleh kosong!');
+        return;
+    }
+    books.push({title, available:true, resi:null, tanggalPengembalian:null});
+    localStorage.setItem('books', JSON.stringify(books));
+    displayBooks();
+    document.getElementById('bookForm').reset();
+}
+
+// Generate nomor resi unik untuk peminjaman
+function generateResi() {
+    const datePart = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const resiHariIni = books.map(b => b.resi).filter(r => r && r.startsWith('RESI'+datePart)).sort();
+    let nomor = 1;
+    if(resiHariIni.length > 0) {
+        const last = resiHariIni[resiHariIni.length-1];
+        nomor = parseInt(last.slice(-3)) + 1;
+    }
+    return `RESI${datePart}-${nomor.toString().padStart(3,'0')}`;
+}
+
+// Tampilkan daftar buku dengan resi dan tanggal pengembalian
+function displayBooks(){
+    const list = document.getElementById('bookList');
+    if(books.length === 0) {
+        list.innerHTML = '<p>Belum ada buku tersedia.</p>';
+        return;
+    }
+    list.innerHTML = books.map((book, idx) => `
+        <li>
+            <strong>${book.title}</strong> - 
+            ${book.available 
+                ? `<span style="color:green">Tersedia</span>` 
+                : `<span style="color:red">Dipinjam</span><br>
+                   <small>Nomor Resi: <em>${book.resi || '-'}</em></small><br>
+                   <small>Tanggal Pengembalian: <em>${book.tanggalPengembalian || '-'}</em></small>`
+            }
+            <br/>
+            ${book.available 
+                ? `<button onclick="pinjamBuku(${idx})" style="background:#28a745;color:#fff;">Pinjam Buku</button>` 
+                : `<button onclick="kembalikanBuku(${idx})" style="background:#ffc107;">Kembalikan Buku</button>`
+            }
+            <button onclick="deleteBook(${idx})" style="background:#dc3545;margin-left:10px;color:#fff;">Hapus</button>
+        </li>
+    `).join('');
+}
+
+function pinjamBuku(index) {
+    const buku = books[index];
+    const tanggalKembali = prompt('Masukkan tanggal pengembalian (YYYY-MM-DD)', '');
+
+    if(!tanggalKembali) {
+        alert('Tanggal pengembalian wajib diisi!');
+        return;
+    }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(tanggalKembali)) {
+        alert('Format tanggal tidak valid. Contoh: 2023-12-31');
+        return;
+    }
+
+    buku.available = false;
+    buku.tanggalPengembalian = tanggalKembali;
+    buku.resi = generateResi();
+    localStorage.setItem('books', JSON.stringify(books));
+    alert(`Buku "${buku.title}" berhasil dipinjam.\nNomor Resi: ${buku.resi}\nTanggal Pengembalian: ${buku.tanggalPengembalian}`);
+    displayBooks();
+}
+
+function kembalikanBuku(index) {
+    if(!confirm('Apakah buku sudah dikembalikan?')) return;
+    const buku = books[index];
+    buku.available = true;
+    buku.tanggalPengembalian = null;
+    buku.resi = null;
+    localStorage.setItem('books', JSON.stringify(books));
+    alert(`Buku "${buku.title}" sudah dikembalikan dan tersedia.`);
+    displayBooks();
+}
+
+function toggleBorrow(index) {
+    books[index].available = !books[index].available;
+    localStorage.setItem('books', JSON.stringify(books));
+    displayBooks();
+}
+
+function deleteBook(index){
+    if(!confirm('Yakin ingin menghapus buku ini?')) return;
+    books.splice(index,1);
+    localStorage.setItem('books', JSON.stringify(books));
+    displayBooks();
 }
