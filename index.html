@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perpustakaan Sekolah</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Sistem Perpustakaan Sekolah</h1>
+    </header>
+    
+    <div id="login">
+        <h2>Pilih Peran Anda</h2>
+        <button onclick="setRole('siswa')">Siswa</button>
+        <button onclick="setRole('guru')">Guru</button>
+        <button onclick="setRole('penjaga')">Penjaga Perpustakaan</button>
+    </div>
+    
+    <div id="content" style="display: none;">
+        <!-- Konten dinamis berdasarkan peran -->
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
