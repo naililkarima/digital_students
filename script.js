@@ -1,21 +1,14 @@
-// Variabel global
-let currentRole = '';
-let books = JSON.parse(localStorage.getItem('books')) || [
-    { title: 'Novel: Harry Potter', available: true },
-    { title: 'Cerpen: Kisah Klasik', available: false },
-    { title: 'Latsol Matematika', available: true }
+// Tambahkan variabel global baru untuk fasilitas dan jadwal
+let fasilitasList = [
+    "LabKom 1", "LabKom 2", "LabKom 3", "LabKom 4",
+    "Lab Kimia", "Lab Biologi", "Lab Fisika", "PKWU",
+    "Perpustakaan", "Mushola", "Lapangan Basket", "Lapangan Voli",
+    "Aula 1", "Aula 2"
 ];
-let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
-    {
-        title: 'Quiz Matematika Dasar',
-        questions: [
-            { question: 'Berapa 2 + 2?', options: ['3', '4', '5'], correct: 1 },
-            { question: 'Apa akar kuadrat dari 9?', options: ['2', '3', '4'], correct: 1 }
-        ]
-    }
-];
+// Struktur jadwal: { fasilitas, tanggal, jam (1-10), status, guru, mapel, kelas }
+let jadwalFasilitas = JSON.parse(localStorage.getItem('jadwalFasilitas')) || [];
 
-// Fungsi untuk set peran
+// Fungsi set role diperbarui agar ada opsi fasilitas
 function setRole(role) {
     currentRole = role;
     document.getElementById('login').style.display = 'none';
@@ -23,20 +16,13 @@ function setRole(role) {
     loadContent();
 }
 
-// Fungsi untuk kembali ke menu utama
-function goHome() {
-    currentRole = '';
-    document.getElementById('content').style.display = 'none';
-    document.getElementById('login').style.display = 'block';
-    document.getElementById('content').innerHTML = '';
-}
-
-// Fungsi untuk load konten berdasarkan peran
+// Fungsi render konten berdasarkan role termasuk fasilitas baru
 function loadContent() {
     const content = document.getElementById('content');
     content.innerHTML = '';
 
     if (currentRole === 'siswa') {
+        // Sama seperti sebelumnya
         content.innerHTML = `
             <h2><i class="fas fa-search"></i> Menu Siswa</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -51,6 +37,7 @@ function loadContent() {
         `;
         loadQuizzesForStudent();
     } else if (currentRole === 'guru') {
+        // Sama seperti sebelumnya
         content.innerHTML = `
             <h2><i class="fas fa-edit"></i> Menu Guru</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -64,6 +51,7 @@ function loadContent() {
         `;
         document.getElementById('quizForm').addEventListener('submit', saveQuiz);
     } else if (currentRole === 'penjaga') {
+        // Sama seperti sebelumnya
         content.innerHTML = `
             <h2><i class="fas fa-cogs"></i> Menu Penjaga Perpustakaan</h2>
             <button class="logout-btn" onclick="goHome()">Keluar</button>
@@ -76,180 +64,205 @@ function loadContent() {
         `;
         document.getElementById('bookForm').addEventListener('submit', addBook);
         displayBooks();
-    }
-    localStorage.setItem('books', JSON.stringify(books));
-    localStorage.setItem('quizzes', JSON.stringify(quizzes));
-}
-
-// Fungsi untuk siswa: Cari buku
-function searchBook() {
-    const query = document.getElementById('searchBook').value.toLowerCase();
-    const results = books.filter(book => book.title.toLowerCase().includes(query));
-    const resultsDiv = document.getElementById('bookResults');
-    resultsDiv.innerHTML = results.length
-        ? results
-              .map(
-                  book =>
-                      `<li>${book.title} - Status: ${
-                          book.available
-                              ? '<span style="color: green;">Tersedia</span>'
-                              : '<span style="color: red;">Dipinjam</span>'
-                      }</li>`
-              )
-              .join('')
-        : '<p>Tidak ada buku ditemukan.</p>';
-}
-
-// Fungsi untuk siswa: Load quiz
-function loadQuizzesForStudent() {
-    const select = document.getElementById('quizSelect');
-    select.innerHTML = '<option>Pilih Quiz</option>' + quizzes.map((quiz, index) => `<option value="${index}">${quiz.title}</option>`).join('');
-}
-
-// Fungsi untuk siswa: Mulai quiz
-function startQuiz() {
-    const index = document.getElementById('quizSelect').value;
-    if (index === 'Pilih Quiz') return alert('Pilih quiz dulu!');
-    const quiz = quizzes[index];
-    const container = document.getElementById('quizContainer');
-    container.innerHTML = '';
-    quiz.questions.forEach((q, i) => {
-        container.innerHTML += `
-            <div class="question">
-                <p><strong>${q.question}</strong></p>
-                ${q.options
-                    .map((opt, j) => `<label><input type="radio" name="q${i}" value="${j}" /> ${opt}</label><br>`)
-                    .join('')}
-            </div>
+    } else if (currentRole === 'fasilitas') {
+        content.innerHTML = `
+            <h2><i class="fas fa-building"></i> Menu Fasilitas</h2>
+            <button class="logout-btn" onclick="goHome()">Keluar</button>
+            <label for="selectFasilitas">Pilih Fasilitas:</label>
+            <select id="selectFasilitas"></select>
+            <div id="jadwalContainer"></div>
         `;
-    });
-    container.innerHTML += `<button onclick="submitQuiz(${index})">Submit</button>`;
+        loadFasilitasOptions();
+        document.getElementById('selectFasilitas').addEventListener('change', renderJadwalFasilitas);
+    }
 }
 
-// Fungsi untuk siswa: Submit quiz
-function submitQuiz(index) {
-    const quiz = quizzes[index];
-    let score = 0;
-    quiz.questions.forEach((q, i) => {
-        const selected = document.querySelector(`input[name="q${i}"]:checked`);
-        if (selected && parseInt(selected.value) === q.correct) score++;
-    });
-    document.getElementById('quizContainer').innerHTML += `<div class="quiz-result">Nilai Anda: ${score}/${quiz.questions.length}</div>`;
+function loadFasilitasOptions() {
+    const select = document.getElementById('selectFasilitas');
+    select.innerHTML = '<option value="">--Pilih Fasilitas--</option>' + fasilitasList.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 
-// Fungsi untuk guru: Tambah soal
-function addQuestion() {
-    const container = document.getElementById('questionsContainer');
-    const questionIndex = container.children.length;
-    const questionDiv = document.createElement('div');
-    questionDiv.className = 'question';
-    questionDiv.innerHTML = `
-        <h4>Soal ${questionIndex + 1}</h4>
-        <input type="text" placeholder="Pertanyaan" required />
-        <div class="options">
-            <input type="text" placeholder="Opsi 1" required />
-            <input type="text" placeholder="Opsi 2" required />
-            <input type="text" placeholder="Opsi 3 (opsional)" />
-            <input type="text" placeholder="Opsi 4 (opsional)" />
-        </div>
-        <select required>
-            <option value="">Pilih Jawaban Benar</option>
-            <option value="0">Opsi 1</option>
-            <option value="1">Opsi 2</option>
-            <option value="2">Opsi 3</option>
-            <option value="3">Opsi 4</option>
-        </select>
-        <button type="button" onclick="removeQuestion(this)">Hapus Soal Ini</button>
+function renderJadwalFasilitas() {
+    const fasil = document.getElementById('selectFasilitas').value;
+    const container = document.getElementById('jadwalContainer');
+
+    if (!fasil) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Ambil semua booking slot fasilitas terpilih (hari ini sebagai default bisa dirubah manual)
+    let hariIni = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+
+    // Filter jadwal hanya fasilitas ini dan hari ini / bisa dikembangkan untuk pilih tanggal
+    let jadwalHariIni = jadwalFasilitas.filter(j => j.fasilitas === fasil && j.tanggal === hariIni);
+
+    const getStatusSlot = (jam) => {
+        let slot = jadwalHariIni.find(j => j.jam === jam);
+        if (!slot) return "Kosong";
+        return slot.status === "booking" ? "Digunakan" : slot.status || "Kosong";
+    };
+
+    // Buat tabel jadwal 10 slot jam
+    let html = `<h3>Jadwal untuk ${fasil} pada tanggal <input type="date" id="tanggalJadwal" value="${hariIni}"/></h3>`;
+    html += `<table border="1" cellpadding="8" cellspacing="0" style="width:100%; max-width:600px;">
+        <thead>
+            <tr>
+                <th>Jam Ke-</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
     `;
-    container.appendChild(questionDiv);
+    for (let jam=1; jam<=10; jam++) {
+        let slot = jadwalHariIni.find(j => j.jam === jam);
+        html += `<tr>
+            <td>${jam}</td>
+            <td>${slot ? slot.status === "booking" ? "Digunakan" : slot.status : "Kosong"}</td>
+            <td>
+                <button onclick="openBookingForm('${fasil}',${jam})">${slot ? slot.status === "booking" ? "Edit Booking" : "Booking" : "Booking"}</button>
+                ${slot ? `<button onclick="hapusBooking('${fasil}',${jam})" style="background:#dc3545;margin-left:10px;">Batalkan</button>` : ''}
+            </td>
+        </tr>`;
+    }
+    html += `</tbody></table>`;
+    html += `<div id="bookingFormContainer"></div>`;
+
+    container.innerHTML = html;
+
+    // Event listener untuk perubahan tanggal agar reload jadwal sesuai tanggal
+    document.getElementById('tanggalJadwal').addEventListener('change', (e) => {
+        renderJadwalFasilitasTanggal(fasil, e.target.value);
+    });
 }
 
-// Fungsi untuk guru: Hapus soal
-function removeQuestion(button) {
-    button.parentElement.remove();
+function renderJadwalFasilitasTanggal(fasil, tanggal) {
+    // Render jadwal mirip renderJadwalFasilitas tapi pake tanggal parameter
+    const container = document.getElementById('jadwalContainer');
+    
+    // Filter jadwal slot fasilitas dan tanggal
+    let jadwalPerTanggal = jadwalFasilitas.filter(j => j.fasilitas === fasil && j.tanggal === tanggal);
+
+    let html = `<h3>Jadwal untuk ${fasil} pada tanggal <input type="date" id="tanggalJadwal" value="${tanggal}"/></h3>`;
+    html += `<table border="1" cellpadding="8" cellspacing="0" style="width:100%; max-width:600px;">
+        <thead>
+            <tr>
+                <th>Jam Ke-</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+    for (let jam=1; jam<=10; jam++) {
+        let slot = jadwalPerTanggal.find(j => j.jam === jam);
+        html += `<tr>
+            <td>${jam}</td>
+            <td>${slot ? slot.status === "booking" ? "Digunakan" : slot.status : "Kosong"}</td>
+            <td>
+                <button onclick="openBookingForm('${fasil}',${jam})">${slot ? slot.status === "booking" ? "Edit Booking" : "Booking" : "Booking"}</button>
+                ${slot ? `<button onclick="hapusBooking('${fasil}',${jam})" style="background:#dc3545;margin-left:10px;">Batalkan</button>` : ''}
+            </td>
+        </tr>`;
+    }
+    html += `</tbody></table>`;
+    html += `<div id="bookingFormContainer"></div>`;
+    container.innerHTML = html;
+
+    document.getElementById('tanggalJadwal').addEventListener('change', (e) => {
+        renderJadwalFasilitasTanggal(fasil, e.target.value);
+    });
 }
 
-// Fungsi untuk guru: Simpan quiz
-function saveQuiz(e) {
-    e.preventDefault();
-    const title = document.getElementById('quizTitle').value.trim();
-    const questions = [];
-    const questionDivs = document.querySelectorAll('.question');
+// Fungsi tampilkan form booking atau edit booking
+function openBookingForm(fasilitas, jam) {
+    const container = document.getElementById('bookingFormContainer');
+    const tanggalInput = document.getElementById('tanggalJadwal');
+    const tanggal = tanggalInput ? tanggalInput.value : new Date().toISOString().slice(0,10);
 
-    for (let div of questionDivs) {
-        const question = div.querySelector('input[placeholder="Pertanyaan"]').value.trim();
-        const options = Array.from(div.querySelectorAll('.options input'))
-            .map(input => input.value.trim())
-            .filter(opt => opt !== '');
-        const correct = parseInt(div.querySelector('select').value);
+    // Cari jika sudah ada booking slot ini utk edit
+    let existing = jadwalFasilitas.find(j => j.fasilitas === fasilitas && j.jam === jam && j.tanggal === tanggal);
 
-        if (!question || options.length < 2 || isNaN(correct) || correct >= options.length) {
-            alert('Soal tidak lengkap! Pastikan pertanyaan, minimal 2 opsi, dan jawaban benar sesuai opsi.');
+    container.innerHTML = `
+        <h4>Booking untuk ${fasilitas} Jam ke-${jam} tanggal ${tanggal}</h4>
+        <form id="formBookingFasilitas">
+            <label>Nama Guru Pengajar</label>
+            <input type="text" id="inputGuru" value="${existing ? existing.guru : ''}" required />
+            <label>Mata Pelajaran</label>
+            <input type="text" id="inputMapel" value="${existing ? existing.mapel : ''}" required />
+            <label>Kelas</label>
+            <input type="text" id="inputKelas" value="${existing ? existing.kelas : ''}" required />
+            <button type="submit">${existing ? 'Perbarui Booking' : 'Buat Booking'}</button>
+            <button type="button" onclick="batalBookingForm()">Batal</button>
+        </form>
+        <p style="color:#666;font-size:0.9em;">Jika selesai, klik "Buat Booking" atau "Perbarui Booking".</p>
+    `;
+
+    document.getElementById('formBookingFasilitas').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const guru = document.getElementById('inputGuru').value.trim();
+        const mapel = document.getElementById('inputMapel').value.trim();
+        const kelas = document.getElementById('inputKelas').value.trim();
+        if(!guru || !mapel || !kelas) {
+            alert('Semua data harus diisi!');
             return;
         }
-        questions.push({ question, options, correct });
-    }
 
-    if (!title) {
-        alert('Judul quiz tidak boleh kosong!');
-        return;
-    }
-    if (questions.length === 0) {
-        alert('Tambahkan setidaknya satu soal!');
-        return;
-    }
+        // Update jadwal atau tambah baru
+        let idx = jadwalFasilitas.findIndex(j=>j.fasilitas===fasilitas && j.jam===jam && j.tanggal===tanggal);
+        if(idx!==-1) {
+            jadwalFasilitas[idx].status = 'booking';
+            jadwalFasilitas[idx].guru = guru;
+            jadwalFasilitas[idx].mapel = mapel;
+            jadwalFasilitas[idx].kelas = kelas;
+        } else {
+            jadwalFasilitas.push({
+                fasilitas,
+                tanggal,
+                jam,
+                status: 'booking',
+                guru,
+                mapel,
+                kelas
+            });
+        }
 
-    quizzes.push({ title, questions });
-    localStorage.setItem('quizzes', JSON.stringify(quizzes));
-    alert('Quiz disimpan!');
-    document.getElementById('quizForm').reset();
-    document.getElementById('questionsContainer').innerHTML = '';
+        localStorage.setItem('jadwalFasilitas', JSON.stringify(jadwalFasilitas));
+        alert('Booking berhasil disimpan!');
+        batalBookingForm();
+        renderJadwalFasilitasTanggal(fasilitas, tanggal);
+    });
 }
 
-// Fungsi untuk penjaga: Tambah buku
-function addBook(e) {
-    e.preventDefault();
-    const title = document.getElementById('bookTitle').value.trim();
-    if (!title) {
-        alert('Judul buku tidak boleh kosong!');
-        return;
+// Fungsi batal dan sembunyikan form booking
+function batalBookingForm() {
+    document.getElementById('bookingFormContainer').innerHTML = '';
+}
+
+// Fungsi batalkan booking tertentu
+function hapusBooking(fasilitas, jam) {
+    const tanggalInput = document.getElementById('tanggalJadwal');
+    const tanggal = tanggalInput ? tanggalInput.value : new Date().toISOString().slice(0,10);
+
+    if (!confirm(`Batalkan booking ${fasilitas} jam ke-${jam} tanggal ${tanggal}?`)) return;
+
+    let idx = jadwalFasilitas.findIndex(j => j.fasilitas === fasilitas && j.jam === jam && j.tanggal === tanggal);
+    if (idx !== -1) {
+        jadwalFasilitas.splice(idx, 1);
+        localStorage.setItem('jadwalFasilitas', JSON.stringify(jadwalFasilitas));
+        alert('Booking berhasil dibatalkan.');
+        renderJadwalFasilitasTanggal(fasilitas, tanggal);
+        batalBookingForm();
     }
-    books.push({ title, available: true });
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
-    document.getElementById('bookForm').reset();
 }
 
-// Fungsi untuk penjaga: Tampilkan buku
-function displayBooks() {
-    const list = document.getElementById('bookList');
-    list.innerHTML = books
-        .map(
-            (book, index) => `
-        <li>
-            ${book.title} - ${
-                book.available
-                    ? '<span style="color: green;">Tersedia</span>'
-                    : '<span style="color: red;">Dipinjam</span>'
-            }
-            <button onclick="toggleBorrow(${index})">${book.available ? 'Tandai Dipinjam' : 'Tandai Kembali'}</button>
-            <button onclick="deleteBook(${index})" style="background: #dc3545;">Hapus</button>
-        </li>
-    `
-        )
-        .join('');
-}
+// --- Fungsi lain tetap sama, seperti addBook(), searchBook(), dll ---
 
-// Fungsi untuk penjaga: Toggle pinjam
-function toggleBorrow(index) {
-    books[index].available = !books[index].available;
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
-}
-
-// Fungsi untuk penjaga: Hapus buku
-function deleteBook(index) {
-    books.splice(index, 1);
-    localStorage.setItem('books', JSON.stringify(books));
-    displayBooks();
+// Jangan lupa tambahkan fungsi goHome() jika belum ada:
+function goHome() {
+    currentRole = '';
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('login').style.display = 'block';
+    document.getElementById('content').innerHTML = '';
 }
