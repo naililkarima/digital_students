@@ -4,7 +4,7 @@ let books = JSON.parse(localStorage.getItem('books')) || [
     { title: 'Novel: Harry Potter', available: true },
     { title: 'Cerpen: Kisah Klasik', available: false },
     { title: 'Latsol Matematika', available: true }
-]; // Data dummy
+];
 let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
     {
         title: 'Quiz Matematika Dasar',
@@ -13,7 +13,7 @@ let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [
             { question: 'Apa akar kuadrat dari 9?', options: ['2', '3', '4'], correct: 1 }
         ]
     }
-]; // Data dummy
+];
 
 // Fungsi untuk set peran
 function setRole(role) {
@@ -21,6 +21,14 @@ function setRole(role) {
     document.getElementById('login').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     loadContent();
+}
+
+// Fungsi untuk kembali ke menu utama
+function goHome() {
+    currentRole = '';
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('login').style.display = 'block';
+    document.getElementById('content').innerHTML = '';
 }
 
 // Fungsi untuk load konten berdasarkan peran
@@ -31,8 +39,9 @@ function loadContent() {
     if (currentRole === 'siswa') {
         content.innerHTML = `
             <h2><i class="fas fa-search"></i> Menu Siswa</h2>
+            <button class="logout-btn" onclick="goHome()">Keluar</button>
             <h3>Cari Buku</h3>
-            <input type="text" id="searchBook" placeholder="Ketik judul buku">
+            <input type="text" id="searchBook" placeholder="Ketik judul buku" />
             <button onclick="searchBook()">Cari</button>
             <div id="bookResults"></div>
             <h3>Kerjakan Quiz</h3>
@@ -44,9 +53,10 @@ function loadContent() {
     } else if (currentRole === 'guru') {
         content.innerHTML = `
             <h2><i class="fas fa-edit"></i> Menu Guru</h2>
+            <button class="logout-btn" onclick="goHome()">Keluar</button>
             <h3>Buat Bank Soal</h3>
             <form id="quizForm">
-                <input type="text" id="quizTitle" placeholder="Judul Quiz" required>
+                <input type="text" id="quizTitle" placeholder="Judul Quiz" required />
                 <div id="questionsContainer"></div>
                 <button type="button" onclick="addQuestion()">Tambah Soal</button>
                 <button type="submit">Simpan Quiz</button>
@@ -56,9 +66,10 @@ function loadContent() {
     } else if (currentRole === 'penjaga') {
         content.innerHTML = `
             <h2><i class="fas fa-cogs"></i> Menu Penjaga Perpustakaan</h2>
+            <button class="logout-btn" onclick="goHome()">Keluar</button>
             <h3>Kelola Buku</h3>
             <form id="bookForm">
-                <input type="text" id="bookTitle" placeholder="Judul Buku" required>
+                <input type="text" id="bookTitle" placeholder="Judul Buku" required />
                 <button type="submit">Tambah Buku</button>
             </form>
             <ul id="bookList"></ul>
@@ -75,17 +86,24 @@ function searchBook() {
     const query = document.getElementById('searchBook').value.toLowerCase();
     const results = books.filter(book => book.title.toLowerCase().includes(query));
     const resultsDiv = document.getElementById('bookResults');
-    resultsDiv.innerHTML = results.length ? results.map(book => 
-        `<li>${book.title} - Status: ${book.available ? '<span style="color: green;">Tersedia</span>' : '<span style="color: red;">Dipinjam</span>'}</li>`
-    ).join('') : '<p>Tidak ada buku ditemukan.</p>';
+    resultsDiv.innerHTML = results.length
+        ? results
+              .map(
+                  book =>
+                      `<li>${book.title} - Status: ${
+                          book.available
+                              ? '<span style="color: green;">Tersedia</span>'
+                              : '<span style="color: red;">Dipinjam</span>'
+                      }</li>`
+              )
+              .join('')
+        : '<p>Tidak ada buku ditemukan.</p>';
 }
 
 // Fungsi untuk siswa: Load quiz
 function loadQuizzesForStudent() {
     const select = document.getElementById('quizSelect');
-    select.innerHTML = '<option>Pilih Quiz</option>' + quizzes.map((quiz, index) => 
-        `<option value="${index}">${quiz.title}</option>`
-    ).join('');
+    select.innerHTML = '<option>Pilih Quiz</option>' + quizzes.map((quiz, index) => `<option value="${index}">${quiz.title}</option>`).join('');
 }
 
 // Fungsi untuk siswa: Mulai quiz
@@ -99,7 +117,9 @@ function startQuiz() {
         container.innerHTML += `
             <div class="question">
                 <p><strong>${q.question}</strong></p>
-                ${q.options.map((opt, j) => `<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label><br>`).join('')}
+                ${q.options
+                    .map((opt, j) => `<label><input type="radio" name="q${i}" value="${j}" /> ${opt}</label><br>`)
+                    .join('')}
             </div>
         `;
     });
@@ -125,12 +145,12 @@ function addQuestion() {
     questionDiv.className = 'question';
     questionDiv.innerHTML = `
         <h4>Soal ${questionIndex + 1}</h4>
-        <input type="text" placeholder="Pertanyaan" required>
+        <input type="text" placeholder="Pertanyaan" required />
         <div class="options">
-            <input type="text" placeholder="Opsi 1" required>
-            <input type="text" placeholder="Opsi 2" required>
-            <input type="text" placeholder="Opsi 3 (opsional)">
-            <input type="text" placeholder="Opsi 4 (opsional)">
+            <input type="text" placeholder="Opsi 1" required />
+            <input type="text" placeholder="Opsi 2" required />
+            <input type="text" placeholder="Opsi 3 (opsional)" />
+            <input type="text" placeholder="Opsi 4 (opsional)" />
         </div>
         <select required>
             <option value="">Pilih Jawaban Benar</option>
@@ -152,28 +172,33 @@ function removeQuestion(button) {
 // Fungsi untuk guru: Simpan quiz
 function saveQuiz(e) {
     e.preventDefault();
-    const title = document.getElementById('quizTitle').value;
+    const title = document.getElementById('quizTitle').value.trim();
     const questions = [];
     const questionDivs = document.querySelectorAll('.question');
-    
+
     for (let div of questionDivs) {
-        const question = div.querySelector('input[placeholder="Pertanyaan"]').value;
-        const options = Array.from(div.querySelectorAll('.options input')).map(input => input.value).filter(opt => opt.trim() !== '');
+        const question = div.querySelector('input[placeholder="Pertanyaan"]').value.trim();
+        const options = Array.from(div.querySelectorAll('.options input'))
+            .map(input => input.value.trim())
+            .filter(opt => opt !== '');
         const correct = parseInt(div.querySelector('select').value);
-        
-        if (question && options.length >= 2 && !isNaN(correct)) {
-            questions.push({ question, options, correct });
-        } else {
-            alert('Soal tidak lengkap! Pastikan ada pertanyaan, minimal 2 opsi, dan jawaban benar.');
+
+        if (!question || options.length < 2 || isNaN(correct) || correct >= options.length) {
+            alert('Soal tidak lengkap! Pastikan pertanyaan, minimal 2 opsi, dan jawaban benar sesuai opsi.');
             return;
         }
+        questions.push({ question, options, correct });
     }
-    
+
+    if (!title) {
+        alert('Judul quiz tidak boleh kosong!');
+        return;
+    }
     if (questions.length === 0) {
         alert('Tambahkan setidaknya satu soal!');
         return;
     }
-    
+
     quizzes.push({ title, questions });
     localStorage.setItem('quizzes', JSON.stringify(quizzes));
     alert('Quiz disimpan!');
@@ -184,7 +209,11 @@ function saveQuiz(e) {
 // Fungsi untuk penjaga: Tambah buku
 function addBook(e) {
     e.preventDefault();
-    const title = document.getElementById('bookTitle').value;
+    const title = document.getElementById('bookTitle').value.trim();
+    if (!title) {
+        alert('Judul buku tidak boleh kosong!');
+        return;
+    }
     books.push({ title, available: true });
     localStorage.setItem('books', JSON.stringify(books));
     displayBooks();
@@ -194,11 +223,21 @@ function addBook(e) {
 // Fungsi untuk penjaga: Tampilkan buku
 function displayBooks() {
     const list = document.getElementById('bookList');
-    list.innerHTML = books.map((book, index) => 
-        `<li>${book.title} - ${book.available ? '<span style="color: green;">Tersedia</span>' : '<span style="color: red;">Dipinjam</span>'} 
-        <button onclick="toggleBorrow(${index})">${book.available ? 'Tandai Dipinjam' : 'Tandai Kembali'}</button>
-        <button onclick="deleteBook(${index})" style="background: #dc3545;">Hapus</button></li>`
-    ).join('');
+    list.innerHTML = books
+        .map(
+            (book, index) => `
+        <li>
+            ${book.title} - ${
+                book.available
+                    ? '<span style="color: green;">Tersedia</span>'
+                    : '<span style="color: red;">Dipinjam</span>'
+            }
+            <button onclick="toggleBorrow(${index})">${book.available ? 'Tandai Dipinjam' : 'Tandai Kembali'}</button>
+            <button onclick="deleteBook(${index})" style="background: #dc3545;">Hapus</button>
+        </li>
+    `
+        )
+        .join('');
 }
 
 // Fungsi untuk penjaga: Toggle pinjam
