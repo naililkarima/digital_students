@@ -218,46 +218,55 @@ li small {
     box-shadow: 0 7px 30px rgba(255, 184, 0, 0.85);
 }
 
-/* Responsif untuk HP (max-width: 480px) */
+/* Responsif untuk HP (max-width: 480px) - Lebih kompak */
 @media (max-width: 480px) {
     header {
-        padding: 15px 10px;
-        font-size: 1.5em;
+        padding: 10px 8px; /* Kurangi padding lebih drastis */
+        font-size: 1.3em; /* Kurangi font-size */
+        margin-bottom: 5px; /* Kurangi margin bawah */
     }
     .container {
-        margin: 15px auto;
-        padding: 15px 15px;
+        margin: 10px auto; /* Kurangi margin */
+        padding: 12px 12px; /* Kurangi padding */
+        border-radius: 8px; /* Kurangi border-radius */
+    }
+    #login h2 {
+        font-size: 1.2em; /* Kurangi font-size judul */
+        margin-bottom: 10px; /* Kurangi margin bawah */
     }
     .role-buttons {
-        gap: 10px;
+        gap: 8px; /* Kurangi gap */
+        flex-direction: column; /* Susun vertikal untuk HP */
     }
     .role-btn {
-        padding: 10px 20px;
-        font-size: 1em;
+        padding: 8px 16px; /* Kurangi padding */
+        font-size: 0.9em; /* Kurangi font-size */
+        width: 100%; /* Lebar penuh untuk klik mudah */
+        max-width: none; /* Hapus max-width */
     }
     input, select, textarea, button {
-        padding: 10px;
-        font-size: 0.9em;
-        max-width: 100%;
+        padding: 8px; /* Kurangi padding */
+        font-size: 0.85em; /* Kurangi font-size */
+        max-width: 100%; /* Pastikan tidak lebar */
     }
     button {
-        padding: 10px 20px;
-        font-size: 0.9em;
-        max-width: 160px;
+        padding: 8px 16px; /* Kurangi padding */
+        font-size: 0.85em; /* Kurangi font-size */
+        max-width: 140px; /* Kurangi max-width */
     }
     li {
-        padding: 10px 12px;
+        padding: 8px 10px; /* Kurangi padding */
     }
     .question {
-        padding: 12px;
+        padding: 10px; /* Kurangi padding */
     }
     .option {
-        padding: 6px 8px;
+        padding: 5px 7px; /* Kurangi padding */
     }
     .logout-btn {
-        padding: 8px 15px;
-        font-size: 0.85em;
-        max-width: 130px;
+        padding: 6px 12px; /* Kurangi padding */
+        font-size: 0.8em; /* Kurangi font-size */
+        max-width: 120px; /* Kurangi max-width */
     }
 }
 
@@ -265,7 +274,7 @@ li small {
 @media (max-width: 768px) {
     .role-buttons {
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
     }
     li {
         flex-direction: column;
