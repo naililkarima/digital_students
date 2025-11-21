@@ -131,4 +131,11 @@ function loadQuizzesForStudent() {
 }
 
 function startQuiz() {
-    const index
+    const index = document.getElementById('quizSelect').value;
+    if (index === 'Pilih Quiz') return alert('Pilih quiz dulu!');
+    const quiz = quizzes[index];
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = '';
+    window.selectedOptions = {};
+    quiz.questions.forEach((q,i) => {
+        container
