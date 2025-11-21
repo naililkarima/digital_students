@@ -113,29 +113,4 @@ function searchBook(){
     if(results.length){
         resultsDiv.innerHTML = results.map(book => `
             <li>
-                <strong>${book.title}</strong> (${book.kategori}) - 
-                Status: ${book.available ? '<span style="color:green">Tersedia</span>' : '<span style="color:red">Dipinjam</span>'}
-            </li>
-        `).join('');
-    } else {
-        resultsDiv.innerHTML = '<p>Tidak ada buku ditemukan.</p>';
-    }
-}
-
-// Quiz tanpa radio button klik
-window.selectedOptions = {};
-
-function loadQuizzesForStudent() {
-    const select = document.getElementById('quizSelect');
-    select.innerHTML = '<option>Pilih Quiz</option>' + quizzes.map((quiz, index) => `<option value="${index}">${quiz.title}</option>`).join('');
-}
-
-function startQuiz() {
-    const index = document.getElementById('quizSelect').value;
-    if (index === 'Pilih Quiz') return alert('Pilih quiz dulu!');
-    const quiz = quizzes[index];
-    const container = document.getElementById('quizContainer');
-    container.innerHTML = '';
-    window.selectedOptions = {};
-    quiz.questions.forEach((q,i) => {
-        container
+                <
